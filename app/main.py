@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 
 # fastapi
 from fastapi import FastAPI
@@ -18,11 +19,11 @@ import s3
 
 
 # Environment variables
-MYSQL_HOST = os.environ['MYSQL_HOST']
-MYSQL_USER = os.environ['MYSQL_USER']
-MYSQL_PASSWORD = os.environ['MYSQL_PASSWORD']
-MYSQL_PORT = int(os.environ['MYSQL_PORT'])
-MYSQL_DB = os.environ['MYSQL_DB']
+MYSQL_HOST = os.getenv('MYSQL_HOST')
+MYSQL_USER = os.getenv('MYSQL_USER')
+MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD')
+MYSQL_PORT = int(os.getenv('MYSQL_PORT'))
+MYSQL_DB = os.getenv('MYSQL_DB')
 
 app = FastAPI()
 
@@ -43,7 +44,7 @@ def shutdown():
     connection.close()
 
 
-def image_to_data_uri(img):
+def image_to_data_uri(img: Image.Image):
     buffered = BytesIO()
     img.save(buffered, 'JPEG')
     img_base64 = base64.b64encode(buffered.getvalue())
@@ -53,7 +54,7 @@ def image_to_data_uri(img):
     return data_uri_string
 
 
-def draw_box(img, lt_corner, rb_corner, index):
+def draw_box(img, lt_corner: Tuple[int], rb_corner: Tuple[int], index: int):
     draw = ImageDraw.Draw(img)
     draw.rectangle([lt_corner, rb_corner], outline="red", width=2)
     draw.text(lt_corner, str(index), font=ImageFont.truetype(
@@ -61,12 +62,14 @@ def draw_box(img, lt_corner, rb_corner, index):
     return img
 
 
-def get_s3_image(uri):
+def get_s3_image(uri: str):
     img_stream = s3.get_file_stream(uri)
     return Image.open(img_stream)
 
 
 def get_latest_result_all():
+    if not connection.open:
+        connection.ping(reconnect=True)
     with connection.cursor(cursor=DictCursor) as cursor:
         query_latest = ("SELECT branch_id, camera_id, epoch "
                         "FROM data "
@@ -95,7 +98,7 @@ def result_latest():
     image_with_box = original_image
     results = []
     for index, row in enumerate(rows):
-        image_with_box = draw_box(image_with_box, (row['position_left'], row['position_top']), (
+        image_with_box = draw_box(image_with_box, (row['position    _left'], row['position_top']), (
             row['position_right'], row['position_bottom']), index)
         results.append({
             'gender': {
