@@ -98,7 +98,7 @@ def result_latest():
     image_with_box = original_image
     results = []
     for index, row in enumerate(rows):
-        image_with_box = draw_box(image_with_box, (row['position    _left'], row['position_top']), (
+        image_with_box = draw_box(image_with_box, (row['position_left'], row['position_top']), (
             row['position_right'], row['position_bottom']), index)
         results.append({
             'gender': {
