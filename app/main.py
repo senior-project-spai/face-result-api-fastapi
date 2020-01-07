@@ -68,8 +68,7 @@ def get_s3_image(uri: str):
 
 
 def get_latest_result_all():
-    if not connection.open:
-        connection.ping(reconnect=True)
+    connection.ping(reconnect=True)
     with connection.cursor(cursor=DictCursor) as cursor:
         query_latest = ("SELECT branch_id, camera_id, epoch "
                         "FROM data "
