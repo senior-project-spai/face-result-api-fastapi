@@ -97,16 +97,16 @@ def result_csv(start: int, end: int):
     # get data from DB
     connection.ping(reconnect=True)
     with connection.cursor(cursor=DictCursor) as cursor:
-        query_latest = ("SELECT branch_id, camera_id, epoch "
+        query_latest = ("SELECT epoch, branch_id, camera_id, filepath,"
+                        "       gender, gender_confident AS gender_confidence,"
+                        "       race, race_confident AS race_confidence "
                         "FROM data "
                         "WHERE epoch BETWEEN %s AND %s "
-                        "ORDER BY epoch DESC "
-                        "LIMIT 1;")
+                        "ORDER BY epoch DESC ")
         cursor.execute(query_latest, (int(start), int(end)))
         rows = cursor.fetchall()
 
     # transform to csv
-    print(rows) # DEBUG
     if not rows:
         return {}  # TODO: return 204 code
     csv_stream = StringIO()
