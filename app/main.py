@@ -106,7 +106,8 @@ def result_csv(start: int, end: int):
         rows = cursor.fetchall()
 
     # transform to csv
-    if rows is None:
+    print(rows) # DEBUG
+    if not rows:
         return {}  # TODO: return 204 code
     csv_stream = StringIO()
     csv_writer = csv.DictWriter(csv_stream, fieldnames=list(rows[0].keys()))
