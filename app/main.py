@@ -1,9 +1,12 @@
 import os
 from typing import Tuple
+import csv
+from io import StringIO
 
 # fastapi
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import StreamingResponse
 
 # sql
 import pymysql
@@ -86,6 +89,34 @@ def get_latest_result_all():
                        (row['branch_id'], row['camera_id'], row['epoch']))
         rows = cursor.fetchall()
     return rows
+
+
+@app.get("/_api/result/csv")
+def result_csv(start: int, end: int):
+
+    # get data from DB
+    connection.ping(reconnect=True)
+    with connection.cursor(cursor=DictCursor) as cursor:
+        query_latest = ("SELECT branch_id, camera_id, epoch "
+                        "FROM data "
+                        "WHERE epoch BETWEEN %s AND %s "
+                        "ORDER BY epoch DESC "
+                        "LIMIT 1;")
+        cursor.execute(query_latest, int(start), int(end))
+        rows = cursor.fetchall()
+
+    # transform to csv
+    if rows is None:
+        return {}  # TODO: return 204 code
+    csv_stream = StringIO()
+    csv_writer = csv.DictWriter(csv_stream, fieldnames=list(rows[0].keys()))
+    csv_writer.writeheader()
+    csv_writer.writerows(rows)
+    csv_stream.seek(0)
+
+    # send to response
+    csv_name = "result-start-{}-to-{}.csv".format(start, end)
+    return StreamingResponse(csv_stream, media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="{}"'.format(csv_name)})
 
 
 @app.get("/_api/result/latest")
