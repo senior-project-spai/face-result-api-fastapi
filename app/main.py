@@ -102,7 +102,7 @@ def result_csv(start: int, end: int):
                         "WHERE epoch BETWEEN %s AND %s "
                         "ORDER BY epoch DESC "
                         "LIMIT 1;")
-        cursor.execute(query_latest, int(start), int(end))
+        cursor.execute(query_latest, (int(start), int(end)))
         rows = cursor.fetchall()
 
     # transform to csv
