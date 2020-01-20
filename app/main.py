@@ -81,7 +81,7 @@ def get_latest_result():
                                    "LIMIT 1;")
         cursor.execute(query_latest_face_image)
         face_image_row = cursor.fetchone()
-        face_image_id = row['id']
+        face_image_id = face_image_row['id']
 
         # Get Gender Result
         query_gender = ("SELECT type, confidence "
