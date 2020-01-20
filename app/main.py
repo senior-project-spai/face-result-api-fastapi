@@ -57,10 +57,10 @@ def image_to_data_uri(img: Image.Image):
     return data_uri_string
 
 
-def draw_box(img, lt_corner: Tuple[int], rb_corner: Tuple[int], index: int):
+def draw_box(img, lt_corner: Tuple[int], rb_corner: Tuple[int], title: str):
     draw = ImageDraw.Draw(img)
     draw.rectangle([lt_corner, rb_corner], outline="red", width=2)
-    draw.text(lt_corner, str(index), font=ImageFont.truetype(
+    draw.text(lt_corner, title, font=ImageFont.truetype(
         "font/RobotoMono-Bold.ttf", size=16))
     return img
 
@@ -70,25 +70,66 @@ def get_s3_image(uri: str):
     return Image.open(img_stream)
 
 
-def get_latest_result_all():
+def get_latest_result():
     connection.ping(reconnect=True)
     with connection.cursor(cursor=DictCursor) as cursor:
-        query_latest = ("SELECT branch_id, camera_id, epoch "
-                        "FROM data "
-                        "ORDER BY epoch DESC "
-                        "LIMIT 1;")
+        # Get latest face_image_id
+        query_latest_face_image = ("SELECT id, image_path, camera_id, branch_id, `time`, "
+                                   "       position_top, position_right, position_bottom, position_left "
+                                   "FROM FaceImage "
+                                   "ORDER BY epoch DESC "
+                                   "LIMIT 1;")
         cursor.execute(query_latest)
-        row = cursor.fetchone()
+        face_image_row = cursor.fetchone()
+        face_image_id = row['id']
 
-        query_all_result = ("SELECT branch_id, camera_id, filepath, epoch,"
-                            "       gender, gender_confident, race, race_confident,"
-                            "       position_top, position_left, position_right, position_bottom, position_left "
-                            "FROM data "
-                            "WHERE branch_id=%s AND camera_id=%s AND epoch=%s;")
-        cursor.execute(query_all_result,
-                       (row['branch_id'], row['camera_id'], row['epoch']))
-        rows = cursor.fetchall()
-    return rows
+        # Get Gender Result
+        query_gender = ("SELECT type, confidence "
+                        "FROM Gender "
+                        "WHERE face_image_id=%s;")
+        cursor.execute(query_all_result, (face_image_id,))
+        gender_row = cursor.fetchone()
+
+        # Get Race Result
+        query_race = ("SELECT type, confidence "
+                      "FROM Race "
+                      "WHERE face_image_id=%s;")
+        cursor.execute(query_all_result, (face_image_id,))
+        race_row = cursor.fetchone()
+
+    return face_image_row, gender_row, race_row
+
+
+@app.get("/_api/result/latest")
+def result_latest():
+    # Get all rows
+    face_image_row, gender_row, race_row = get_latest_result()
+
+    # Get image
+    image = get_s3_image(face_image_row['image_path'])
+
+    # Draw box
+    image_with_box = draw_box(image,
+                              (face_image_row['position_left'], face_image_ row['position_top']),
+                              (face_image_row['position_right'], face_image_row['position_bottom']), "")
+
+    # Insert one result
+    results = [{
+        'gender': {
+            'type': gender_row['type'],
+            'confidence': gender_row['confidence']
+        },
+        'race': {
+            'type': race_row['type'],
+            'confidence': race_row['confidence']
+        }
+    }]
+
+    return {'epoch': face_image_row['time'],
+            'branch_id': face_image_row['branch_id'],
+            'camera_id': face_image_row['camera_id'],
+            'results': results,
+            'photo_data_uri': image_to_data_uri(image_with_box)}
 
 
 @app.get("/_api/result/csv")
@@ -118,32 +159,3 @@ def result_csv(start: int, end: int):
     # send to response
     csv_name = "result-start-{}-to-{}.csv".format(start, end)
     return StreamingResponse(csv_stream, media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="{}"'.format(csv_name)})
-
-
-@app.get("/_api/result/latest")
-def result_latest():
-    rows = get_latest_result_all()
-
-    original_image = get_s3_image(rows[0]["filepath"])
-
-    image_with_box = original_image
-    results = []
-    for index, row in enumerate(rows):
-        image_with_box = draw_box(image_with_box, (row['position_left'], row['position_top']), (
-            row['position_right'], row['position_bottom']), index)
-        results.append({
-            'gender': {
-                'gender': row['gender'],
-                'confidence': row['gender_confident']
-            },
-            'race': {
-                'race': row['race'],
-                'confidence': row['race_confident']
-            }
-        })
-
-    return {'epoch': rows[0]['epoch'],
-            'branch_id': rows[0]['branch_id'],
-            'camera_id': rows[0]['camera_id'],
-            'results': results,
-            'photo_data_uri': image_to_data_uri(image_with_box)}
