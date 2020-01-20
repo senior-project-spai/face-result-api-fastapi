@@ -77,7 +77,7 @@ def get_latest_result():
         query_latest_face_image = ("SELECT id, image_path, camera_id, branch_id, `time`, "
                                    "       position_top, position_right, position_bottom, position_left "
                                    "FROM FaceImage "
-                                   "ORDER BY epoch DESC "
+                                   "ORDER BY time DESC "
                                    "LIMIT 1;")
         cursor.execute(query_latest_face_image)
         face_image_row = cursor.fetchone()
