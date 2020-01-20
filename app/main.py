@@ -110,7 +110,7 @@ def result_latest():
 
     # Draw box
     image_with_box = draw_box(image,
-                              (face_image_row['position_left'], face_image_ row['position_top']),
+                              (face_image_row['position_left'], face_image_row['position_top']),
                               (face_image_row['position_right'], face_image_row['position_bottom']), "")
 
     # Insert one result
