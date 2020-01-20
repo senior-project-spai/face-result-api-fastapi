@@ -79,7 +79,7 @@ def get_latest_result():
                                    "FROM FaceImage "
                                    "ORDER BY epoch DESC "
                                    "LIMIT 1;")
-        cursor.execute(query_latest)
+        cursor.execute(query_latest_face_image)
         face_image_row = cursor.fetchone()
         face_image_id = row['id']
 
@@ -87,14 +87,14 @@ def get_latest_result():
         query_gender = ("SELECT type, confidence "
                         "FROM Gender "
                         "WHERE face_image_id=%s;")
-        cursor.execute(query_all_result, (face_image_id,))
+        cursor.execute(query_gender, (face_image_id,))
         gender_row = cursor.fetchone()
 
         # Get Race Result
         query_race = ("SELECT type, confidence "
                       "FROM Race "
                       "WHERE face_image_id=%s;")
-        cursor.execute(query_all_result, (face_image_id,))
+        cursor.execute(query_race, (face_image_id,))
         race_row = cursor.fetchone()
 
     return face_image_row, gender_row, race_row
