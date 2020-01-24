@@ -159,3 +159,8 @@ def result_csv(start: int, end: int):
     # send to response
     csv_name = "result-start-{}-to-{}.csv".format(start, end)
     return StreamingResponse(csv_stream, media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="{}"'.format(csv_name)})
+
+# For check with probe in openshift
+@app.get('/healthz')
+def health_check():
+    return
