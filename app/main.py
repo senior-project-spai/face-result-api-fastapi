@@ -20,6 +20,10 @@ from io import BytesIO
 # S3
 import s3
 
+# logging
+import logging
+
+logger = logging.getLogger("api")
 
 # Environment variables
 MYSQL_HOST = os.getenv('MYSQL_HOST')
@@ -91,7 +95,7 @@ def get_latest_result():
         cursor.execute(query_race, (face_image_id,))
         race_row = cursor.fetchone()
     connection.close()
-    print(face_image_row, gender_row, race_row)
+    logger.info(face_image_row, gender_row, race_row)
     return face_image_row, gender_row, race_row
 
 
