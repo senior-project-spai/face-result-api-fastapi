@@ -38,13 +38,6 @@ connection = None
 @app.on_event('startup')
 def startup():
     global connection
-    connection = pymysql.connect(
-        host=MYSQL_HOST, port=MYSQL_PORT, user=MYSQL_USER, passwd=MYSQL_PASSWORD, db=MYSQL_DB, autocommit=True)
-
-
-@app.on_event('shutdown')
-def shutdown():
-    connection.close()
 
 
 def image_to_data_uri(img: Image.Image):
@@ -71,7 +64,8 @@ def get_s3_image(uri: str):
 
 
 def get_latest_result():
-    connection.ping(reconnect=True)
+    connection = pymysql.connect(
+        host=MYSQL_HOST, port=MYSQL_PORT, user=MYSQL_USER, passwd=MYSQL_PASSWORD, db=MYSQL_DB, autocommit=True)
     with connection.cursor(cursor=DictCursor) as cursor:
         # Get latest face_image_id
         query_latest_face_image = ("SELECT id, image_path, camera_id, branch_id, `time`, "
@@ -96,7 +90,7 @@ def get_latest_result():
                       "WHERE face_image_id=%s;")
         cursor.execute(query_race, (face_image_id,))
         race_row = cursor.fetchone()
-
+    connection.close()
     return face_image_row, gender_row, race_row
 
 
@@ -136,7 +130,8 @@ def result_latest():
 def result_csv(start: int, end: int):
 
     # get data from DB
-    connection.ping(reconnect=True)
+    connection = pymysql.connect(
+        host=MYSQL_HOST, port=MYSQL_PORT, user=MYSQL_USER, passwd=MYSQL_PASSWORD, db=MYSQL_DB, autocommit=True)
     with connection.cursor(cursor=DictCursor) as cursor:
         query_latest = ("SELECT epoch, branch_id, camera_id, filepath,"
                         "       gender, gender_confident AS gender_confidence,"
@@ -146,7 +141,7 @@ def result_csv(start: int, end: int):
                         "ORDER BY epoch DESC ")
         cursor.execute(query_latest, (int(start), int(end)))
         rows = cursor.fetchall()
-
+    connection.close()
     # transform to csv
     if not rows:
         return {}  # TODO: return 204 code
