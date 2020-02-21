@@ -88,7 +88,7 @@ def get_latest_result():
         cursor.execute(query_race, (face_image_id,))
         race_row = cursor.fetchone()
     connection.close()
-    logger.info(face_image_row, gender_row, race_row)
+    logger.debug(face_image_row, gender_row, race_row)
     return face_image_row, gender_row, race_row
 
 
