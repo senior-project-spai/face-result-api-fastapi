@@ -118,6 +118,7 @@ def result_latest():
     }]
 
     return {'epoch': face_image_row['time'],
+            'id': face_image_row['id'],
             'branch_id': face_image_row['branch_id'],
             'camera_id': face_image_row['camera_id'],
             'results': results,
