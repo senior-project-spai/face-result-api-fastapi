@@ -36,13 +36,6 @@ app = FastAPI()
 
 app.add_middleware(CORSMiddleware, allow_origins=['*'])
 
-connection = None
-
-
-@app.on_event('startup')
-def startup():
-    global connection
-
 
 def image_to_data_uri(img: Image.Image):
     buffered = BytesIO()
