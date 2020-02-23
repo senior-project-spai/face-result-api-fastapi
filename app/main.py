@@ -2,6 +2,7 @@ import os
 from typing import Tuple
 import csv
 from io import StringIO
+import time
 
 # fastapi
 from fastapi import FastAPI
@@ -291,9 +292,8 @@ def result_csv(start: int = None,
     csv_stream.seek(0)
 
     # send to response
-    csv_name = "result-start-{}-to-{}.csv".format(start, end)
-    return {'data_length': effected_row, 'query': query}
-    # return StreamingResponse(csv_stream, media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="{}"'.format(csv_name)})
+    csv_name = "result-{}.csv".format(int(time.time()))
+    return StreamingResponse(csv_stream, media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="{}"'.format(csv_name)})
 
 # For check with probe in openshift
 
