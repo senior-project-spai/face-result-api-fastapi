@@ -180,85 +180,85 @@ def result_csv(start: int = None,
             if is_first_query:
                 is_first_query = False
             else:
-                query += (" AND ")
-            query += ("FaceImage.time >= %(start)s ")
+                query += " AND "
+            query += "FaceImage.time >= %(start)s "
         if end is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query += (" AND ")
-            query += (" FaceImage.time <= %(end)s ")
+                query += " AND "
+            query += " FaceImage.time <= %(end)s "
         if race is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query += (" AND ")
-            query += (" Race.type like %(race)s ")
+                query += " AND "
+            query += " Race.type like %(race)s "
         if gender is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query += (" AND ")
-            query += (" Gender.type like %(gender)s ")
+                query += " AND "
+            query += " Gender.type like %(gender)s "
         if min_age is not None:
             if is_first_query:
                 is_first_query = False
-                query += (" AND ")
-            query += (" Age.min_age >= %(min_age)s ")
+                query += " AND "
+            query += " Age.min_age >= %(min_age)s "
         if max_age is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query += (" AND ")
-            query += (" Age.max_age <= %(max_age)s ")
+                query += " AND "
+            query += " Age.max_age <= %(max_age)s "
         if min_gender_confidence is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query += (" AND ")
-            query += (" Gender.confidence >= %(min_gender_confidence)s ")
+                query += " AND "
+            query += " Gender.confidence >= %(min_gender_confidence)s "
         if min_age_confidence is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query += (" AND ")
-            query += (" Gender.confidence <= %(min_age_confidence)s ")
+                query += " AND "
+            query += " Gender.confidence <= %(min_age_confidence)s "
         if min_race_confidence is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query += (" AND ")
-            query += (" Race.confidence >= %(min_race_confidence)s ")
+                query += " AND "
+            query += " Race.confidence >= %(min_race_confidence)s "
         if max_gender_confidence is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query += (" AND ")
-            query += (" Race.confidence <= %(max_gender_confidence)s ")
+                query += " AND "
+            query += " Race.confidence <= %(max_gender_confidence)s "
         if max_age_confidence is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query += (" AND ")
-            query += (" Age.confidence >= %(max_age_confidence)s ")
+                query += " AND "
+            query += " Age.confidence >= %(max_age_confidence)s "
         if max_race_confidence is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query += (" AND ")
-            query += (" Age.confidence <= %(max_race_confidence)s ")
+                query += " AND "
+            query += " Age.confidence <= %(max_race_confidence)s "
         if branch is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query += (" AND ")
-            query += (" FaceImage.branch_id <= %(branch)s ")
+                query += " AND "
+            query += " FaceImage.branch_id <= %(branch)s "
         if camera is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query += (" AND ")
-            query += (" FaceImage.camera_id <= %(camera)s ")
+                query += " AND "
+            query += " FaceImage.camera_id <= %(camera)s "
         print(query)
         effected_row = cursor.execute(query, {
             "start": start,
