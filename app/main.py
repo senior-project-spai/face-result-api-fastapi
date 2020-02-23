@@ -290,7 +290,8 @@ def result_csv(start: int = None,
 
     # send to response
     csv_name = "result-start-{}-to-{}.csv".format(start, end)
-    return StreamingResponse(csv_stream, media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="{}"'.format(csv_name)})
+    return {'data_length':len(rows)}
+    # return StreamingResponse(csv_stream, media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="{}"'.format(csv_name)})
 
 # For check with probe in openshift
 
