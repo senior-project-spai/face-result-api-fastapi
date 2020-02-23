@@ -246,7 +246,7 @@ def result_csv(start: int = None,
             else:
                 query_latest += (" AND ")
             query_latest += (" Age.confidence <= %(max_race_confidence)s ")
-
+        print(query_latest)
         query_data = {
             "start": start,
             "end": end,
