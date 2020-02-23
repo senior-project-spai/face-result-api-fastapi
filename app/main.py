@@ -126,7 +126,7 @@ def result_latest():
 
 
 @app.get("/_api/result/csv")
-def result_csv(start: int, end: int, race: str, age: str, gender: str):
+def result_csv(start: int, end: int=None, race: str =None, age: str=None, gender: str=None):
 
     # get data from DB
     connection = pymysql.connect(
