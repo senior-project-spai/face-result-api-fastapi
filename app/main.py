@@ -134,12 +134,12 @@ def result_csv(start: int = None,
                max_age: int = None,
                branch: int = None,
                camera: int = None,
-               min_gender_confidence: int = None,
-               max_gender_confidence: int = None,
-               min_age_confidence: int = None,
-               max_age_confidence: int = None,
-               min_race_confidence: int = None,
-               max_race_confidence: int = None):
+               min_gender_confidence: float = None,
+               max_gender_confidence: float = None,
+               min_age_confidence: float = None,
+               max_age_confidence: float = None,
+               min_race_confidence: float = None,
+               max_race_confidence: float = None):
 
     # get data from DB
     connection = pymysql.connect(
