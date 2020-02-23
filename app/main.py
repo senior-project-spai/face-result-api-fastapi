@@ -178,21 +178,25 @@ def result_csv(start: int = None,
         if start is not None:
             if is_first_query:
                 is_first_query = False
+            else:
                 query_latest += (" AND ")
             query_latest += ("FaceImage.time >= %(start)s ")
         if end is not None:
             if is_first_query:
                 is_first_query = False
+            else:
                 query_latest += (" AND ")
             query_latest += (" FaceImage.time <= %(end)s ")
         if race is not None:
             if is_first_query:
                 is_first_query = False
+            else:
                 query_latest += (" AND ")
             query_latest += (" Race.type like '%(race)s' ")
         if gender is not None:
             if is_first_query:
                 is_first_query = False
+            else:
                 query_latest += (" AND ")
             query_latest += (" Gender.type like '%(gender)s' ")
         if min_age is not None:
@@ -203,36 +207,43 @@ def result_csv(start: int = None,
         if max_age is not None:
             if is_first_query:
                 is_first_query = False
+            else:
                 query_latest += (" AND ")
             query_latest += (" Age.max_age <= %(max_age)s ")
         if min_gender_confidence is not None:
             if is_first_query:
                 is_first_query = False
+            else:
                 query_latest += (" AND ")
             query_latest += (" Gender.confidence >= %(min_gender_confidence)s ")
         if min_age_confidence is not None:
             if is_first_query:
                 is_first_query = False
+            else:
                 query_latest += (" AND ")
             query_latest += (" Gender.confidence <= %(min_age_confidence)s ")
         if min_race_confidence is not None:
             if is_first_query:
                 is_first_query = False
+            else:
                 query_latest += (" AND ")
             query_latest += (" Race.confidence >= %(min_race_confidence)s ")
         if max_gender_confidence is not None:
             if is_first_query:
                 is_first_query = False
+            else:
                 query_latest += (" AND ")
             query_latest += (" Race.confidence <= %(max_gender_confidence)s ")
         if max_age_confidence is not None:
             if is_first_query:
                 is_first_query = False
+            else:
                 query_latest += (" AND ")
             query_latest += (" Age.confidence >= %(max_age_confidence)s ")
         if max_race_confidence is not None:
             if is_first_query:
                 is_first_query = False
+            else:
                 query_latest += (" AND ")
             query_latest += (" Age.confidence <= %(max_race_confidence)s ")
 
