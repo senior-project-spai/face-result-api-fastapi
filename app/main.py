@@ -126,36 +126,44 @@ def result_latest():
 
 
 @app.get("/_api/result/csv")
-def result_csv(start: int, end: int):
+def result_csv(start: int, end: int, race: str, age: str, gender: str):
 
     # get data from DB
     connection = pymysql.connect(
         host=MYSQL_HOST, port=MYSQL_PORT, user=MYSQL_USER, passwd=MYSQL_PASSWORD, db=MYSQL_DB, autocommit=True)
     with connection.cursor(cursor=DictCursor) as cursor:
         query_latest = ("SELECT "
-                            "FaceImage.time AS time, "
-                            "FaceImage.branch_id AS branch_id, "
-                            "FaceImage.camera_id AS camera_id, "
-                            "FaceImage.image_path AS filepath, "
-                            "Gender.type AS gender, "
-                            "Gender.confidence AS gender_confidence, "
-                            "Age.max_age AS max_age, "
-                            "Age.min_age AS min_age, "
-                            "Age.confidence AS age_confidence, "
-                            "Race.type AS race, "
-                            "Race.confidence AS race_confidence "
+                        "   FaceImage.time AS time, "
+                        "   FaceImage.branch_id AS branch_id, "
+                        "   FaceImage.camera_id AS camera_id, "
+                        "   FaceImage.image_path AS filepath, "
+                        "   Gender.type AS gender, "
+                        "   Gender.confidence AS gender_confidence, "
+                        "   Age.max_age AS max_age, "
+                        "   Age.min_age AS min_age, "
+                        "   Age.confidence AS age_confidence, "
+                        "   Race.type AS race, "
+                        "   Race.confidence AS race_confidence "
                         "FROM "
-                            "FaceImage "
-                                "INNER JOIN "
-                            "Gender ON FaceImage.id = Gender.face_image_id "
-                                "INNER JOIN "
-                            "Age ON FaceImage.id = Age.face_image_id "
-                                "INNER JOIN "
-                            "Race ON FaceImage.id = Race.face_image_id "
+                        "   FaceImage "
+                        "INNER JOIN "
+                        "   Gender ON FaceImage.id = Gender.face_image_id "
+                        "INNER JOIN "
+                        "   Age ON FaceImage.id = Age.face_image_id "
+                        "INNER JOIN "
+                        "   Race ON FaceImage.id = Race.face_image_id "
                         "WHERE "
-                            "FaceImage.time >= %s "
-                                "AND FaceImage.time <= %s ")
-        cursor.execute(query_latest, (int(start), int(end)))
+                        "   FaceImage.time >= %(start)s "
+                        "AND "
+                        "   FaceImage.time <= %(end)s ")
+        query_data = {
+            "start": int(start),
+            "end": int(end),
+            "race": race,
+            "gender": gender,
+            "age": age,
+        }
+        cursor.execute(query_latest, query_data)
         rows = cursor.fetchall()
     connection.close()
     # transform to csv
@@ -172,6 +180,8 @@ def result_csv(start: int, end: int):
     return StreamingResponse(csv_stream, media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="{}"'.format(csv_name)})
 
 # For check with probe in openshift
+
+
 @app.get('/healthz')
 def health_check():
     return
