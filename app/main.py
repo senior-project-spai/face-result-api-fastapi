@@ -132,12 +132,29 @@ def result_csv(start: int, end: int):
     connection = pymysql.connect(
         host=MYSQL_HOST, port=MYSQL_PORT, user=MYSQL_USER, passwd=MYSQL_PASSWORD, db=MYSQL_DB, autocommit=True)
     with connection.cursor(cursor=DictCursor) as cursor:
-        query_latest = ("SELECT epoch, branch_id, camera_id, filepath,"
-                        "       gender, gender_confident AS gender_confidence,"
-                        "       race, race_confident AS race_confidence "
-                        "FROM data "
-                        "WHERE epoch BETWEEN %s AND %s "
-                        "ORDER BY epoch DESC ")
+        query_latest = ("SELECT "
+                            "FaceImage.time AS time, "
+                            "FaceImage.branch_id AS branch_id, "
+                            "FaceImage.camera_id AS camera_id, "
+                            "FaceImage.image_path AS filepath, "
+                            "Gender.type AS gender, "
+                            "Gender.confidence AS gender_confidence, "
+                            "Age.max_age AS max_age, "
+                            "Age.min_age AS min_age, "
+                            "Age.confidence AS age_confidence, "
+                            "Race.type AS race, "
+                            "Race.confidence AS race_confidence "
+                        "FROM "
+                            "FaceImage "
+                                "INNER JOIN "
+                            "Gender ON FaceImage.id = Gender.face_image_id "
+                                "INNER JOIN "
+                            "Age ON FaceImage.id = Age.face_image_id "
+                                "INNER JOIN "
+                            "Race ON FaceImage.id = Race.face_image_id "
+                        "WHERE "
+                            "FaceImage.time >= %s "
+                                "AND FaceImage.time <= %s ")
         cursor.execute(query_latest, (int(start), int(end)))
         rows = cursor.fetchall()
     connection.close()
