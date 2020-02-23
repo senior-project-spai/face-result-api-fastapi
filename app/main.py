@@ -203,6 +203,7 @@ def result_csv(start: int = None,
         if min_age is not None:
             if is_first_query:
                 is_first_query = False
+            else:
                 query += " AND "
             query += " Age.min_age >= %(min_age)s "
         if max_age is not None:
