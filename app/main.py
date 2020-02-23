@@ -129,9 +129,9 @@ def result_latest():
 def result_csv(start: int = None,
                end: int = None,
                race: str = None,
+               gender: str = None,
                min_age: int = None,
                max_age: int = None,
-               gender: str = None,
                branch: int = None,
                camera: int = None,
                min_gender_confidence: int = None,
@@ -174,7 +174,7 @@ def result_csv(start: int = None,
                         "WHERE ")
         is_first_query = True
         if max_gender_confidence is None and max_race_confidence is None and max_age_confidence is None and min_gender_confidence is None and min_age_confidence is None and min_race_confidence is None and start is None and end is None and race is None and gender is None and min_age is None and max_age is None:
-            return {}
+            return {'query': query_latest}
         if start is not None:
             if is_first_query:
                 is_first_query = False
@@ -266,7 +266,8 @@ def result_csv(start: int = None,
     connection.close()
     # transform to csv
     if not rows:
-        return {}  # TODO: return 204 code
+        # TODO: return 204 code
+        return {'query': query_latest, 'error': 'no row in DBs'}
     csv_stream = StringIO()
     csv_writer = csv.DictWriter(csv_stream, fieldnames=list(rows[0].keys()))
     csv_writer.writeheader()
