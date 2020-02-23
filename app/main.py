@@ -176,7 +176,7 @@ def result_csv(start: int = None,
                  "WHERE ")
         is_first_query = True
         if branch is None and camera is None and max_gender_confidence is None and max_race_confidence is None and max_age_confidence is None and min_gender_confidence is None and min_age_confidence is None and min_race_confidence is None and start is None and end is None and race is None and gender is None and min_age is None and max_age is None:
-            return {'query': query}
+            return {}
         if start is not None:
             if is_first_query:
                 is_first_query = False
@@ -284,7 +284,7 @@ def result_csv(start: int = None,
     # transform to csv
     if not rows:
         # TODO: return 204 code
-        return {'query': query, 'error': 'no row in DBs'}
+        return {}
     csv_stream = StringIO()
     csv_writer = csv.DictWriter(csv_stream, fieldnames=list(rows[0].keys()))
     csv_writer.writeheader()
