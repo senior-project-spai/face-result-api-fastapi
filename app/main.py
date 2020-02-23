@@ -192,13 +192,13 @@ def result_csv(start: int = None,
                 is_first_query = False
             else:
                 query_latest += (" AND ")
-            query_latest += (' Race.type like "%(race)s" ')
+            query_latest += (" Race.type like \"%(race)s\" ")
         if gender is not None:
             if is_first_query:
                 is_first_query = False
             else:
                 query_latest += (" AND ")
-            query_latest += (' Gender.type like "%(gender)s" ')
+            query_latest += (" Gender.type like \"%(gender)s\" ")
         if min_age is not None:
             if is_first_query:
                 is_first_query = False
