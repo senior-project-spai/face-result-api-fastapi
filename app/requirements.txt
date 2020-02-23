@@ -1,3 +1,4 @@
 fastapi
 PyMySQL
+boto3
 Pillow
