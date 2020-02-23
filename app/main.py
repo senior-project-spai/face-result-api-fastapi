@@ -151,7 +151,7 @@ def result_csv(start: int = None,
         autocommit=True
     )
     with connection.cursor(cursor=DictCursor) as cursor:
-        query_latest = ("SELECT "
+        query_data = ("SELECT "
                         "   FaceImage.time AS time, "
                         "   FaceImage.branch_id AS branch_id, "
                         "   FaceImage.camera_id AS camera_id, "
@@ -174,84 +174,84 @@ def result_csv(start: int = None,
                         "WHERE ")
         is_first_query = True
         if max_gender_confidence is None and max_race_confidence is None and max_age_confidence is None and min_gender_confidence is None and min_age_confidence is None and min_race_confidence is None and start is None and end is None and race is None and gender is None and min_age is None and max_age is None:
-            return {'query': query_latest}
+            return {'query': query_data}
         if start is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query_latest += (" AND ")
-            query_latest += ("FaceImage.time >= %(start)s ")
+                query_data += (" AND ")
+            query_data += ("FaceImage.time >= %(start)s ")
         if end is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query_latest += (" AND ")
-            query_latest += (" FaceImage.time <= %(end)s ")
+                query_data += (" AND ")
+            query_data += (" FaceImage.time <= %(end)s ")
         if race is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query_latest += (" AND ")
-            query_latest += (" Race.type like \"%(race)s\" ")
+                query_data += (" AND ")
+            query_data += (" Race.type like %(race)s ")
         if gender is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query_latest += (" AND ")
-            query_latest += (" Gender.type like \"%(gender)s\" ")
+                query_data += (" AND ")
+            query_data += (" Gender.type like %(gender)s ")
         if min_age is not None:
             if is_first_query:
                 is_first_query = False
-                query_latest += (" AND ")
-            query_latest += (" Age.min_age >= %(min_age)s ")
+                query_data += (" AND ")
+            query_data += (" Age.min_age >= %(min_age)s ")
         if max_age is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query_latest += (" AND ")
-            query_latest += (" Age.max_age <= %(max_age)s ")
+                query_data += (" AND ")
+            query_data += (" Age.max_age <= %(max_age)s ")
         if min_gender_confidence is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query_latest += (" AND ")
-            query_latest += (" Gender.confidence >= %(min_gender_confidence)s ")
+                query_data += (" AND ")
+            query_data += (" Gender.confidence >= %(min_gender_confidence)s ")
         if min_age_confidence is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query_latest += (" AND ")
-            query_latest += (" Gender.confidence <= %(min_age_confidence)s ")
+                query_data += (" AND ")
+            query_data += (" Gender.confidence <= %(min_age_confidence)s ")
         if min_race_confidence is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query_latest += (" AND ")
-            query_latest += (" Race.confidence >= %(min_race_confidence)s ")
+                query_data += (" AND ")
+            query_data += (" Race.confidence >= %(min_race_confidence)s ")
         if max_gender_confidence is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query_latest += (" AND ")
-            query_latest += (" Race.confidence <= %(max_gender_confidence)s ")
+                query_data += (" AND ")
+            query_data += (" Race.confidence <= %(max_gender_confidence)s ")
         if max_age_confidence is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query_latest += (" AND ")
-            query_latest += (" Age.confidence >= %(max_age_confidence)s ")
+                query_data += (" AND ")
+            query_data += (" Age.confidence >= %(max_age_confidence)s ")
         if max_race_confidence is not None:
             if is_first_query:
                 is_first_query = False
             else:
-                query_latest += (" AND ")
-            query_latest += (" Age.confidence <= %(max_race_confidence)s ")
-        print(query_latest)
+                query_data += (" AND ")
+            query_data += (" Age.confidence <= %(max_race_confidence)s ")
+        print(query_data)
         query_data = {
             "start": start,
             "end": end,
-            "race": race,
-            "gender": gender,
+            "race": "%{}%".format(race),
+            "gender": "%{}%".format(gender),
             "max_age": max_age,
             "min_age": min_age,
             "min_gender_confidence": min_gender_confidence,
@@ -261,13 +261,13 @@ def result_csv(start: int = None,
             "max_age_confidence": max_age_confidence,
             "max_race_confidence": max_race_confidence,
         }
-        cursor.execute(query_latest, query_data)
+        cursor.execute(query_data, query_data)
         rows = cursor.fetchall()
     connection.close()
     # transform to csv
     if not rows:
         # TODO: return 204 code
-        return {'query': query_latest, 'error': 'no row in DBs'}
+        return {'query': query_data, 'error': 'no row in DBs'}
     csv_stream = StringIO()
     csv_writer = csv.DictWriter(csv_stream, fieldnames=list(rows[0].keys()))
     csv_writer.writeheader()
