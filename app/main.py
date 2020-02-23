@@ -2,12 +2,12 @@ import os
 from typing import Tuple
 import csv
 from io import StringIO
-from pydantic import BaseModel
 
 # fastapi
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import StreamingResponse
+from pydantic import BaseModel
 
 # sql
 import pymysql
@@ -18,9 +18,11 @@ import base64
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 
+# S3
+import s3
+
 # logging
 import logging
-
 logger = logging.getLogger("api")
 
 # Environment variables
@@ -33,23 +35,6 @@ MYSQL_DB = os.getenv('MYSQL_DB')
 app = FastAPI()
 
 app.add_middleware(CORSMiddleware, allow_origins=['*'])
-
-
-class Irequest_query(BaseModel):
-    start: int = None
-    end: int = None
-    race: str = None
-    min_age: int = None
-    max_age: int = None
-    gender: str = None
-    branch: int = None
-    camera: int = None
-    min_gender_confidence: int = None
-    max_gender_confidence: int = None
-    min_age_confidence: int = None
-    max_age_confidence: int = None
-    min_race_confidence: int = None
-    max_race_confidence: int = None
 
 
 def image_to_data_uri(img: Image.Image):
@@ -141,7 +126,20 @@ def result_latest():
 
 
 @app.get("/_api/result/csv")
-def result_csv(item: Irequest_query):
+def result_csv(start: int = None,
+               end: int = None,
+               race: str = None,
+               min_age: int = None,
+               max_age: int = None,
+               gender: str = None,
+               branch: int = None,
+               camera: int = None,
+               min_gender_confidence: int = None,
+               max_gender_confidence: int = None,
+               min_age_confidence: int = None,
+               max_age_confidence: int = None,
+               min_race_confidence: int = None,
+               max_race_confidence: int = None):
 
     # get data from DB
     connection = pymysql.connect(
@@ -175,82 +173,82 @@ def result_csv(item: Irequest_query):
                         "   Race ON FaceImage.id = Race.face_image_id "
                         "WHERE ")
         is_first_query = True
-        if item.max_gender_confidence is None and item.max_race_confidence is None and item.max_age_confidence is None and item.min_gender_confidence is None and item.min_age_confidence is None and item.min_race_confidence is None and item.start is None and item.end is None and item.race is None and item.gender is None and item.age is None:
+        if max_gender_confidence is None and max_race_confidence is None and max_age_confidence is None and min_gender_confidence is None and min_age_confidence is None and min_race_confidence is None and start is None and end is None and race is None and gender is None and min_age is None and max_age is None:
             return {}
-        if item.start is not None:
+        if start is not None:
             if is_first_query:
                 is_first_query = False
                 query_latest += (" AND ")
             query_latest += ("FaceImage.time >= %(start)s ")
-        if item.end is not None:
+        if end is not None:
             if is_first_query:
                 is_first_query = False
                 query_latest += (" AND ")
             query_latest += (" FaceImage.time <= %(end)s ")
-        if item.race is not None:
+        if race is not None:
             if is_first_query:
                 is_first_query = False
                 query_latest += (" AND ")
             query_latest += (" Race.type like '%(race)s' ")
-        if item.gender is not None:
+        if gender is not None:
             if is_first_query:
                 is_first_query = False
                 query_latest += (" AND ")
             query_latest += (" Gender.type like '%(gender)s' ")
-        if item.min_age is not None:
+        if min_age is not None:
             if is_first_query:
                 is_first_query = False
                 query_latest += (" AND ")
             query_latest += (" Age.min_age >= %(min_age)s ")
-        if item.max_age is not None:
+        if max_age is not None:
             if is_first_query:
                 is_first_query = False
                 query_latest += (" AND ")
             query_latest += (" Age.max_age <= %(max_age)s ")
-        if item.min_gender_confidence is not None:
+        if min_gender_confidence is not None:
             if is_first_query:
                 is_first_query = False
                 query_latest += (" AND ")
             query_latest += (" Gender.confidence >= %(min_gender_confidence)s ")
-        if item.min_age_confidence is not None:
+        if min_age_confidence is not None:
             if is_first_query:
                 is_first_query = False
                 query_latest += (" AND ")
             query_latest += (" Gender.confidence <= %(min_age_confidence)s ")
-        if item.min_race_confidence is not None:
+        if min_race_confidence is not None:
             if is_first_query:
                 is_first_query = False
                 query_latest += (" AND ")
             query_latest += (" Race.confidence >= %(min_race_confidence)s ")
-        if item.max_gender_confidence is not None:
+        if max_gender_confidence is not None:
             if is_first_query:
                 is_first_query = False
                 query_latest += (" AND ")
             query_latest += (" Race.confidence <= %(max_gender_confidence)s ")
-        if item.max_age_confidence is not None:
+        if max_age_confidence is not None:
             if is_first_query:
                 is_first_query = False
                 query_latest += (" AND ")
             query_latest += (" Age.confidence >= %(max_age_confidence)s ")
-        if item.max_race_confidence is not None:
+        if max_race_confidence is not None:
             if is_first_query:
                 is_first_query = False
                 query_latest += (" AND ")
             query_latest += (" Age.confidence <= %(max_race_confidence)s ")
 
         query_data = {
-            "start": int(item.start),
-            "end": int(item.end),
-            "race": item.race,
-            "gender": item.gender,
-            "max_age": item.max_age,
-            "min_age": item.min_age,
-            "min_gender_confidence": item.min_gender_confidence,
-            "min_age_confidence": item.min_age_confidence,
-            "min_race_confidence": item.min_race_confidence,
-            "max_gender_confidence": item.max_gender_confidence,
-            "max_age_confidence": item.max_age_confidence,
-            "max_race_confidence": item.max_race_confidence,
+            "start": int(start),
+            "end": int(end),
+            "race": race,
+            "gender": gender,
+            "max_age": max_age,
+            "min_age": min_age,
+            "min_gender_confidence": min_gender_confidence,
+            "min_age_confidence": min_age_confidence,
+            "min_race_confidence": min_race_confidence,
+            "max_gender_confidence": max_gender_confidence,
+            "max_age_confidence": max_age_confidence,
+            "max_race_confidence": max_race_confidence,
         }
         cursor.execute(query_latest, query_data)
         rows = cursor.fetchall()
