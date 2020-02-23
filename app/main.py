@@ -152,26 +152,26 @@ def result_csv(start: int = None,
     )
     with connection.cursor(cursor=DictCursor) as cursor:
         query_data = ("SELECT "
-                        "   FaceImage.time AS time, "
-                        "   FaceImage.branch_id AS branch_id, "
-                        "   FaceImage.camera_id AS camera_id, "
-                        "   FaceImage.image_path AS filepath, "
-                        "   Gender.type AS gender, "
-                        "   Gender.confidence AS gender_confidence, "
-                        "   Age.max_age AS max_age, "
-                        "   Age.min_age AS min_age, "
-                        "   Age.confidence AS age_confidence, "
-                        "   Race.type AS race, "
-                        "   Race.confidence AS race_confidence "
-                        "FROM "
-                        "   FaceImage "
-                        "INNER JOIN "
-                        "   Gender ON FaceImage.id = Gender.face_image_id "
-                        "INNER JOIN "
-                        "   Age ON FaceImage.id = Age.face_image_id "
-                        "INNER JOIN "
-                        "   Race ON FaceImage.id = Race.face_image_id "
-                        "WHERE ")
+                      "   FaceImage.time AS time, "
+                      "   FaceImage.branch_id AS branch_id, "
+                      "   FaceImage.camera_id AS camera_id, "
+                      "   FaceImage.image_path AS filepath, "
+                      "   Gender.type AS gender, "
+                      "   Gender.confidence AS gender_confidence, "
+                      "   Age.max_age AS max_age, "
+                      "   Age.min_age AS min_age, "
+                      "   Age.confidence AS age_confidence, "
+                      "   Race.type AS race, "
+                      "   Race.confidence AS race_confidence "
+                      "FROM "
+                      "   FaceImage "
+                      "INNER JOIN "
+                      "   Gender ON FaceImage.id = Gender.face_image_id "
+                      "INNER JOIN "
+                      "   Age ON FaceImage.id = Age.face_image_id "
+                      "INNER JOIN "
+                      "   Race ON FaceImage.id = Race.face_image_id "
+                      "WHERE ")
         is_first_query = True
         if max_gender_confidence is None and max_race_confidence is None and max_age_confidence is None and min_gender_confidence is None and min_age_confidence is None and min_race_confidence is None and start is None and end is None and race is None and gender is None and min_age is None and max_age is None:
             return {'query': query_data}
@@ -192,13 +192,13 @@ def result_csv(start: int = None,
                 is_first_query = False
             else:
                 query_data += (" AND ")
-            query_data += (" Race.type like %(race)s ")
+            query_data += (" Race.type = %(race)s ")
         if gender is not None:
             if is_first_query:
                 is_first_query = False
             else:
                 query_data += (" AND ")
-            query_data += (" Gender.type like %(gender)s ")
+            query_data += (" Gender.type = %(gender)s ")
         if min_age is not None:
             if is_first_query:
                 is_first_query = False
@@ -250,8 +250,8 @@ def result_csv(start: int = None,
         query_data = {
             "start": start,
             "end": end,
-            "race":  ("%" + race + "%",),
-            "gender":  ("%" + gender + "%",),
+            "race":  race,
+            "gender":   gender,
             "max_age": max_age,
             "min_age": min_age,
             "min_gender_confidence": min_gender_confidence,
