@@ -88,18 +88,25 @@ def get_latest_result():
                       "WHERE face_image_id=%s;")
         cursor.execute(query_race, (face_image_id,))
         race_row = cursor.fetchone()
+
+        # Get Age Result
+        query_age = ("SELECT min_age, max_age, confidence "
+                      "FROM Age "
+                      "WHERE face_image_id=%s;")
+        cursor.execute(query_age, (face_image_id,))
+        age_row = cursor.fetchone()
     connection.close()
-    logger.debug(face_image_row, gender_row, race_row)
-    return face_image_row, gender_row, race_row
+    logger.debug(face_image_row, gender_row, race_row, age_row)
+    return face_image_row, gender_row, race_row, age_row
 
 
 @app.get("/_api/result/latest")
 def result_latest():
     # Get all rows
-    face_image_row, gender_row, race_row = get_latest_result()
+    face_image_result, gender_result, race_result, age_result = get_latest_result()
 
     # Get image
-    image = get_s3_image(face_image_row['image_path'])
+    image = get_s3_image(face_image_result['image_path'])
 
     # # Draw box
     # image_with_box = draw_box(image,
@@ -109,19 +116,24 @@ def result_latest():
     # Insert one result
     results = [{
         'gender': {
-            'type': gender_row['type'],
-            'confidence': gender_row['confidence']
+            'type': gender_result['type'],
+            'confidence': gender_result['confidence']
         },
         'race': {
-            'type': race_row['type'],
-            'confidence': race_row['confidence']
+            'type': race_result['type'],
+            'confidence': race_result['confidence']
+        },
+        'age': {
+            'min_age': age_result['min_age'],
+            'max_age': age_result['max_age'],
+            'confidence': age_result['confidence']
         }
     }]
 
-    return {'epoch': face_image_row['time'],
-            'id': face_image_row['id'],
-            'branch_id': face_image_row['branch_id'],
-            'camera_id': face_image_row['camera_id'],
+    return {'epoch': face_image_result['time'],
+            'id': face_image_result['id'],
+            'branch_id': face_image_result['branch_id'],
+            'camera_id': face_image_result['camera_id'],
             'results': results,
             'photo_data_uri': image_to_data_uri(image)}
 
