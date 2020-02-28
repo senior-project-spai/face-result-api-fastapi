@@ -60,97 +60,6 @@ def get_s3_image(uri: str):
     img_stream = s3.get_file_stream(uri)
     return Image.open(img_stream)
 
-
-def get_result(face_image_id=None):
-    connection = pymysql.connect(
-        host=MYSQL_HOST, port=MYSQL_PORT, user=MYSQL_USER, passwd=MYSQL_PASSWORD, db=MYSQL_DB, autocommit=True)
-    with connection.cursor(cursor=DictCursor) as cursor:
-        if face_image_id:
-            query_latest_face_image = ("SELECT id, image_path, camera_id, branch_id, `time`, "
-                                       "       position_top, position_right, position_bottom, position_left "
-                                       "FROM FaceImage "
-                                       "WHERE id=%(face_image_id)s "
-                                       "ORDER BY time DESC "
-                                       "LIMIT 1;")
-        else:
-            # Get latest face_image_id
-            query_latest_face_image = ("SELECT id, image_path, camera_id, branch_id, `time`, "
-                                       "       position_top, position_right, position_bottom, position_left "
-                                       "FROM FaceImage "
-                                       "ORDER BY time DESC "
-                                       "LIMIT 1;")
-        cursor.execute(query_latest_face_image, {
-                       'face_image_id': face_image_id})
-        face_image_row = cursor.fetchone()
-        face_image_id = face_image_row['id']
-
-        # Get Gender Result
-        query_gender = ("SELECT type, confidence "
-                        "FROM Gender "
-                        "WHERE face_image_id=%s;")
-        cursor.execute(query_gender, (face_image_id,))
-        gender_row = cursor.fetchone()
-
-        # Get Race Result
-        query_race = ("SELECT type, confidence "
-                      "FROM Race "
-                      "WHERE face_image_id=%s;")
-        cursor.execute(query_race, (face_image_id,))
-        race_row = cursor.fetchone()
-
-        # Get Age Result
-        query_age = ("SELECT min_age, max_age, confidence "
-                     "FROM Age "
-                     "WHERE face_image_id=%s;")
-        cursor.execute(query_age, (face_image_id,))
-        age_row = cursor.fetchone()
-    connection.close()
-    logger.debug(face_image_row, gender_row, race_row, age_row)
-    return face_image_row, gender_row, race_row, age_row
-
-
-@app.get("/_api/result/{face_image_id_str}")
-def result_latest(face_image_id_str: str):
-    # Get all rows
-    if face_image_id_str == 'latest':
-        face_image_result, gender_result, race_result, age_result = get_result()
-    else:
-        face_image_result, gender_result, race_result, age_result = get_result(
-            int(face_image_id_str))
-
-        # Get image
-    image = get_s3_image(face_image_result['image_path'])
-
-    # # Draw box
-    # image_with_box = draw_box(image,
-    #                           (face_image_row['position_left'], face_image_row['position_top']),
-    #                           (face_image_row['position_right'], face_image_row['position_bottom']), "")
-
-    # Insert one result
-    results = [{
-        'gender': {
-            'type': gender_result['type'],
-            'confidence': gender_result['confidence']
-        },
-        'race': {
-            'type': race_result['type'],
-            'confidence': race_result['confidence']
-        },
-        'age': {
-            'min_age': age_result['min_age'],
-            'max_age': age_result['max_age'],
-            'confidence': age_result['confidence']
-        }
-    }]
-
-    return {'epoch': face_image_result['time'],
-            'id': face_image_result['id'],
-            'branch_id': face_image_result['branch_id'],
-            'camera_id': face_image_result['camera_id'],
-            'results': results,
-            'photo_data_uri': image_to_data_uri(image)}
-
-
 @app.get("/_api/result/csv")
 def result_csv(start: float = None,
                end: float = None,
@@ -283,6 +192,97 @@ def result_csv(start: float = None,
     time_str = time.strftime("%d_%b_%Y_%H:%M:%S_+0000", time.gmtime())
     csv_name = "result_{}.csv".format()
     return StreamingResponse(csv_stream, media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="{}"'.format(csv_name)})
+
+def get_result(face_image_id=None):
+    connection = pymysql.connect(
+        host=MYSQL_HOST, port=MYSQL_PORT, user=MYSQL_USER, passwd=MYSQL_PASSWORD, db=MYSQL_DB, autocommit=True)
+    with connection.cursor(cursor=DictCursor) as cursor:
+        if face_image_id:
+            query_latest_face_image = ("SELECT id, image_path, camera_id, branch_id, `time`, "
+                                       "       position_top, position_right, position_bottom, position_left "
+                                       "FROM FaceImage "
+                                       "WHERE id=%(face_image_id)s "
+                                       "ORDER BY time DESC "
+                                       "LIMIT 1;")
+        else:
+            # Get latest face_image_id
+            query_latest_face_image = ("SELECT id, image_path, camera_id, branch_id, `time`, "
+                                       "       position_top, position_right, position_bottom, position_left "
+                                       "FROM FaceImage "
+                                       "ORDER BY time DESC "
+                                       "LIMIT 1;")
+        cursor.execute(query_latest_face_image, {
+                       'face_image_id': face_image_id})
+        face_image_row = cursor.fetchone()
+        face_image_id = face_image_row['id']
+
+        # Get Gender Result
+        query_gender = ("SELECT type, confidence "
+                        "FROM Gender "
+                        "WHERE face_image_id=%s;")
+        cursor.execute(query_gender, (face_image_id,))
+        gender_row = cursor.fetchone()
+
+        # Get Race Result
+        query_race = ("SELECT type, confidence "
+                      "FROM Race "
+                      "WHERE face_image_id=%s;")
+        cursor.execute(query_race, (face_image_id,))
+        race_row = cursor.fetchone()
+
+        # Get Age Result
+        query_age = ("SELECT min_age, max_age, confidence "
+                     "FROM Age "
+                     "WHERE face_image_id=%s;")
+        cursor.execute(query_age, (face_image_id,))
+        age_row = cursor.fetchone()
+    connection.close()
+    logger.debug(face_image_row, gender_row, race_row, age_row)
+    return face_image_row, gender_row, race_row, age_row
+
+
+@app.get("/_api/result/{face_image_id_str}")
+def result_latest(face_image_id_str: str):
+    # Get all rows
+    if face_image_id_str == 'latest':
+        face_image_result, gender_result, race_result, age_result = get_result()
+    else:
+        face_image_result, gender_result, race_result, age_result = get_result(
+            int(face_image_id_str))
+
+        # Get image
+    image = get_s3_image(face_image_result['image_path'])
+
+    # # Draw box
+    # image_with_box = draw_box(image,
+    #                           (face_image_row['position_left'], face_image_row['position_top']),
+    #                           (face_image_row['position_right'], face_image_row['position_bottom']), "")
+
+    # Insert one result
+    results = [{
+        'gender': {
+            'type': gender_result['type'],
+            'confidence': gender_result['confidence']
+        },
+        'race': {
+            'type': race_result['type'],
+            'confidence': race_result['confidence']
+        },
+        'age': {
+            'min_age': age_result['min_age'],
+            'max_age': age_result['max_age'],
+            'confidence': age_result['confidence']
+        }
+    }]
+
+    return {'epoch': face_image_result['time'],
+            'id': face_image_result['id'],
+            'branch_id': face_image_result['branch_id'],
+            'camera_id': face_image_result['camera_id'],
+            'results': results,
+            'photo_data_uri': image_to_data_uri(image)}
+
+
 
 # For check with probe in openshift
 
