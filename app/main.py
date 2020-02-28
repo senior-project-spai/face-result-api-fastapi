@@ -69,7 +69,7 @@ def get_result(face_image_id=None):
             query_latest_face_image = ("SELECT id, image_path, camera_id, branch_id, `time`, "
                                        "       position_top, position_right, position_bottom, position_left "
                                        "FROM FaceImage "
-                                       "WHERE id=%(face_image_id)s"
+                                       "WHERE id=%(face_image_id)s "
                                        "ORDER BY time DESC "
                                        "LIMIT 1;")
         else:
