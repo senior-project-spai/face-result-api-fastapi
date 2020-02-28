@@ -190,7 +190,7 @@ def result_csv(start: float = None,
 
     # Send to response
     time_str = time.strftime("%d_%b_%Y_%H:%M:%S_+0000", time.gmtime())
-    csv_name = "result_{}.csv".format()
+    csv_name = "result_{}.csv".format(time_str)
     return StreamingResponse(csv_stream, media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="{}"'.format(csv_name)})
 
 def get_result(face_image_id=None):
