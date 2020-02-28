@@ -91,8 +91,8 @@ def get_latest_result():
 
         # Get Age Result
         query_age = ("SELECT min_age, max_age, confidence "
-                      "FROM Age "
-                      "WHERE face_image_id=%s;")
+                     "FROM Age "
+                     "WHERE face_image_id=%s;")
         cursor.execute(query_age, (face_image_id,))
         age_row = cursor.fetchone()
     connection.close()
@@ -139,8 +139,8 @@ def result_latest():
 
 
 @app.get("/_api/result/csv")
-def result_csv(start: int = None,
-               end: int = None,
+def result_csv(start: float = None,
+               end: float = None,
                race: str = None,
                gender: str = None,
                min_age: int = None,
@@ -154,6 +154,14 @@ def result_csv(start: int = None,
                min_race_confidence: float = None,
                max_race_confidence: float = None):
 
+    # If all param is none, return nothing
+    if all([branch is None, camera is None,
+            max_gender_confidence is None, max_race_confidence is None, max_age_confidence is None,
+            min_gender_confidence is None, min_age_confidence is None, min_race_confidence is None,
+            start is None, end is None,
+            race is None, gender is None, min_age is None, max_age is None]):
+        return {}
+
     # get data from DB
     connection = pymysql.connect(
         host=MYSQL_HOST,
@@ -166,113 +174,65 @@ def result_csv(start: int = None,
     rows = None
     with connection.cursor(cursor=DictCursor) as cursor:
         query = ("SELECT "
-                 "   FaceImage.time AS time, "
-                 "   FaceImage.branch_id AS branch_id, "
-                 "   FaceImage.camera_id AS camera_id, "
-                 "   FaceImage.image_path AS filepath, "
-                 "   Gender.type AS gender, "
-                 "   Gender.confidence AS gender_confidence, "
-                 "   Age.max_age AS max_age, "
-                 "   Age.min_age AS min_age, "
-                 "   Age.confidence AS age_confidence, "
-                 "   Race.type AS race, "
-                 "   Race.confidence AS race_confidence "
-                 "FROM "
-                 "   FaceImage "
-                 "INNER JOIN "
-                 "   Gender ON FaceImage.id = Gender.face_image_id "
-                 "INNER JOIN "
-                 "   Age ON FaceImage.id = Age.face_image_id "
-                 "INNER JOIN "
-                 "   Race ON FaceImage.id = Race.face_image_id "
-                 "WHERE ")
-        is_first_query = True
-        if branch is None and camera is None and max_gender_confidence is None and max_race_confidence is None and max_age_confidence is None and min_gender_confidence is None and min_age_confidence is None and min_race_confidence is None and start is None and end is None and race is None and gender is None and min_age is None and max_age is None:
-            return {}
+                 "  FaceImage.time AS time, "
+                 "  FaceImage.branch_id AS branch_id, "
+                 "  FaceImage.camera_id AS camera_id, "
+                 "  FaceImage.image_path AS filepath, "
+                 "  Gender.type AS gender, "
+                 "  Gender.confidence AS gender_confidence, "
+                 "  Age.max_age AS max_age, "
+                 "  Age.min_age AS min_age, "
+                 "  Age.confidence AS age_confidence, "
+                 "  Race.type AS race, "
+                 "  Race.confidence AS race_confidence "
+                 "FROM FaceImage "
+                 "  INNER JOIN Gender ON FaceImage.id = Gender.face_image_id "
+                 "  INNER JOIN Age ON FaceImage.id = Age.face_image_id "
+                 "  INNER JOIN Race ON FaceImage.id = Race.face_image_id")
+
+        # Add WHERE Clause
+        condition_list = []
         if start is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += "FaceImage.time >= %(start)s "
+            condition_list.append("FaceImage.time >= %(start)s")
         if end is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += " FaceImage.time <= %(end)s "
+            condition_list.append("FaceImage.time <= %(end)s")
         if race is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += " Race.type like %(race)s "
+            condition_list.append("Race.type like %(race)s")
         if gender is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += " Gender.type like %(gender)s "
+            condition_list.append("Gender.type like %(gender)s")
         if min_age is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += " Age.min_age >= %(min_age)s "
+            condition_list.append("Age.min_age >= %(min_age)s")
         if max_age is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += " Age.max_age <= %(max_age)s "
+            condition_list.append("Age.max_age <= %(max_age)s")
         if min_gender_confidence is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += " Gender.confidence >= %(min_gender_confidence)s "
+            condition_list.append(
+                "Gender.confidence >= %(min_gender_confidence)s")
         if min_age_confidence is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += " Gender.confidence <= %(min_age_confidence)s "
+            condition_list.append(
+                "Gender.confidence <= %(min_age_confidence)s")
         if min_race_confidence is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += " Race.confidence >= %(min_race_confidence)s "
+            condition_list.append(
+                "Race.confidence >= %(min_race_confidence)s")
         if max_gender_confidence is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += " Race.confidence <= %(max_gender_confidence)s "
+            condition_list.append(
+                "Race.confidence <= %(max_gender_confidence)s")
         if max_age_confidence is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += " Age.confidence >= %(max_age_confidence)s "
+            condition_list.append("Age.confidence >= %(max_age_confidence)s")
         if max_race_confidence is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += " Age.confidence <= %(max_race_confidence)s "
+            condition_list.append("Age.confidence <= %(max_race_confidence)s")
         if branch is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += " FaceImage.branch_id <= %(branch)s "
+            condition_list.append("FaceImage.branch_id <= %(branch)s")
         if camera is not None:
-            if is_first_query:
-                is_first_query = False
-            else:
-                query += " AND "
-            query += " FaceImage.camera_id <= %(camera)s "
+            condition_list.append("FaceImage.camera_id <= %(camera)s")
+        # Convert to string
+        condition_query_str = ""
+        for condition in condition_list:
+            condition_query_str += condition
+            if condition != condition_list[-1]:
+                condition_query_str += " AND "
+        if condition_query_str != "":
+            query += " WHERE " + condition_query_str
+            
         print(query)
         effected_row = cursor.execute(query, {
             "start": start,
@@ -290,20 +250,22 @@ def result_csv(start: int = None,
             "max_age_confidence": max_age_confidence,
             "max_race_confidence": max_race_confidence
         })
-        
         rows = cursor.fetchall()
     connection.close()
-    # transform to csv
+
+    # Return nothing if rows is empty
     if not rows:
         # TODO: return 204 code
         return {}
+    
+    # Transform to CSV
     csv_stream = StringIO()
     csv_writer = csv.DictWriter(csv_stream, fieldnames=list(rows[0].keys()))
     csv_writer.writeheader()
     csv_writer.writerows(rows)
     csv_stream.seek(0)
 
-    # send to response
+    # Send to response
     csv_name = "result-{}.csv".format(int(time.time()))
     return StreamingResponse(csv_stream, media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="{}"'.format(csv_name)})
 
