@@ -267,7 +267,8 @@ def result_csv(start: float = None,
     csv_stream.seek(0)
 
     # Send to response
-    csv_name = "result-{}.csv".format(int(time.time()))
+    time_str = time.strftime("%d_%b_%Y_%H:%M:%S_+0000", time.gmtime())
+    csv_name = "result_{}.csv".format()
     return StreamingResponse(csv_stream, media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="{}"'.format(csv_name)})
 
 # For check with probe in openshift
