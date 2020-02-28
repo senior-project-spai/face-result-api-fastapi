@@ -174,6 +174,7 @@ def result_csv(start: float = None,
     rows = None
     with connection.cursor(cursor=DictCursor) as cursor:
         query = ("SELECT "
+                 "  FaceImage.id AS id, "
                  "  FaceImage.time AS time, "
                  "  FaceImage.branch_id AS branch_id, "
                  "  FaceImage.camera_id AS camera_id, "
