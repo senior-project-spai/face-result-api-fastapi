@@ -61,17 +61,26 @@ def get_s3_image(uri: str):
     return Image.open(img_stream)
 
 
-def get_latest_result():
+def get_result(face_image_id=None):
     connection = pymysql.connect(
         host=MYSQL_HOST, port=MYSQL_PORT, user=MYSQL_USER, passwd=MYSQL_PASSWORD, db=MYSQL_DB, autocommit=True)
     with connection.cursor(cursor=DictCursor) as cursor:
-        # Get latest face_image_id
-        query_latest_face_image = ("SELECT id, image_path, camera_id, branch_id, `time`, "
-                                   "       position_top, position_right, position_bottom, position_left "
-                                   "FROM FaceImage "
-                                   "ORDER BY time DESC "
-                                   "LIMIT 1;")
-        cursor.execute(query_latest_face_image)
+        if face_image_id:
+            query_latest_face_image = ("SELECT id, image_path, camera_id, branch_id, `time`, "
+                                       "       position_top, position_right, position_bottom, position_left "
+                                       "FROM FaceImage "
+                                       "WHERE id=%(face_image_id)s"
+                                       "ORDER BY time DESC "
+                                       "LIMIT 1;")
+        else:
+            # Get latest face_image_id
+            query_latest_face_image = ("SELECT id, image_path, camera_id, branch_id, `time`, "
+                                       "       position_top, position_right, position_bottom, position_left "
+                                       "FROM FaceImage "
+                                       "ORDER BY time DESC "
+                                       "LIMIT 1;")
+        cursor.execute(query_latest_face_image, {
+                       'face_image_id': face_image_id})
         face_image_row = cursor.fetchone()
         face_image_id = face_image_row['id']
 
@@ -100,12 +109,16 @@ def get_latest_result():
     return face_image_row, gender_row, race_row, age_row
 
 
-@app.get("/_api/result/latest")
-def result_latest():
+@app.get("/_api/result/{face_image_id_str}")
+def result_latest(face_image_id_str: str):
     # Get all rows
-    face_image_result, gender_result, race_result, age_result = get_latest_result()
+    if face_image_id_str == 'latest':
+        face_image_result, gender_result, race_result, age_result = get_result()
+    else:
+        face_image_result, gender_result, race_result, age_result = get_result(
+            int(face_image_id_str))
 
-    # Get image
+        # Get image
     image = get_s3_image(face_image_result['image_path'])
 
     # # Draw box
@@ -233,7 +246,7 @@ def result_csv(start: float = None,
                 condition_query_str += " AND "
         if condition_query_str != "":
             query += " WHERE " + condition_query_str
-            
+
         print(query)
         effected_row = cursor.execute(query, {
             "start": start,
@@ -258,7 +271,7 @@ def result_csv(start: float = None,
     if not rows:
         # TODO: return 204 code
         return {}
-    
+
     # Transform to CSV
     csv_stream = StringIO()
     csv_writer = csv.DictWriter(csv_stream, fieldnames=list(rows[0].keys()))
