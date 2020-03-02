@@ -241,14 +241,14 @@ def get_result(face_image_id=None):
     return face_image_row, gender_row, race_row, age_row
 
 
-@app.get("/_api/result/{face_image_id_str}")
-def result(face_image_id_str: str):
+@app.get("/_api/result/{face_image_id}")
+def result(face_image_id: str):
     # Get all rows
-    if face_image_id_str == 'latest':
+    if face_image_id == 'latest':
         face_image_result, gender_result, race_result, age_result = get_result()
     else:
         face_image_result, gender_result, race_result, age_result = get_result(
-            int(face_image_id_str))
+            int(face_image_id))
 
         # Get image
     image = get_s3_image(face_image_result['image_path'])
