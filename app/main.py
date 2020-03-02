@@ -242,7 +242,7 @@ def get_result(face_image_id=None):
 
 
 @app.get("/_api/result/{face_image_id_str}")
-def result_latest(face_image_id_str: str):
+def result(face_image_id_str: str):
     # Get all rows
     if face_image_id_str == 'latest':
         face_image_result, gender_result, race_result, age_result = get_result()
