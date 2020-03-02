@@ -144,9 +144,9 @@ def result_csv(start: float = None,
         if max_race_confidence is not None:
             condition_list.append("Age.confidence <= %(max_race_confidence)s")
         if branch is not None:
-            condition_list.append("FaceImage.branch_id <= %(branch)s")
+            condition_list.append("FaceImage.branch_id = %(branch)s")
         if camera is not None:
-            condition_list.append("FaceImage.camera_id <= %(camera)s")
+            condition_list.append("FaceImage.camera_id = %(camera)s")
         # Convert to string
         condition_query_str = ""
         for condition in condition_list:
