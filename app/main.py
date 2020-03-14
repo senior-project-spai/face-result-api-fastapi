@@ -217,12 +217,24 @@ def get_result(face_image_id=None):
         face_image_id = face_image_row['id']
 
         # Get Gender Result
-        query_gender = ("SELECT type, confidence "
+        query_gender = ("SELECT type, confidence, position_top, position_right, position_bottom, position_left "
                         "FROM Gender "
                         "WHERE face_image_id=%s;")
         cursor.execute(query_gender, (face_image_id,))
         gender_row = cursor.fetchone()
-
+        
+        if face_image_row['position_top'] is None:
+            face_image_row['position_top'] = gender_row['position_top']
+            
+        if face_image_row['position_right'] is None:
+            face_image_row['position_right'] = gender_row['position_right']
+            
+        if face_image_row['position_bottom'] is None:
+            face_image_row['position_bottom'] = gender_row['position_bottom']
+            
+        if face_image_row['position_left'] is None:
+            face_image_row['position_left'] = gender_row['position_left']
+        
         # Get Race Result
         query_race = ("SELECT type, confidence "
                       "FROM Race "
