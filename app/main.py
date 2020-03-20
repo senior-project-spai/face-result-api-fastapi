@@ -60,6 +60,7 @@ def get_s3_image(uri: str):
     img_stream = s3.get_file_stream(uri)
     return Image.open(img_stream)
 
+
 @app.get("/_api/result/csv")
 def result_csv(start: float = None,
                end: float = None,
@@ -193,6 +194,7 @@ def result_csv(start: float = None,
     csv_name = "result_{}.csv".format(time_str)
     return StreamingResponse(csv_stream, media_type='text/csv', headers={'Content-Disposition': 'attachment; filename="{}"'.format(csv_name)})
 
+
 def get_result(face_image_id=None):
     connection = pymysql.connect(
         host=MYSQL_HOST, port=MYSQL_PORT, user=MYSQL_USER, passwd=MYSQL_PASSWORD, db=MYSQL_DB, autocommit=True)
@@ -217,24 +219,12 @@ def get_result(face_image_id=None):
         face_image_id = face_image_row['id']
 
         # Get Gender Result
-        query_gender = ("SELECT type, confidence, position_top, position_right, position_bottom, position_left "
+        query_gender = ("SELECT type, confidence "
                         "FROM Gender "
                         "WHERE face_image_id=%s;")
         cursor.execute(query_gender, (face_image_id,))
         gender_row = cursor.fetchone()
-        
-        if face_image_row['position_top'] is None:
-            face_image_row['position_top'] = gender_row['position_top']
-            
-        if face_image_row['position_right'] is None:
-            face_image_row['position_right'] = gender_row['position_right']
-            
-        if face_image_row['position_bottom'] is None:
-            face_image_row['position_bottom'] = gender_row['position_bottom']
-            
-        if face_image_row['position_left'] is None:
-            face_image_row['position_left'] = gender_row['position_left']
-        
+
         # Get Race Result
         query_race = ("SELECT type, confidence "
                       "FROM Race "
@@ -265,10 +255,17 @@ def result(face_image_id: str):
         # Get image
     image = get_s3_image(face_image_result['image_path'])
 
-    # Draw box
-    image_with_box = draw_box(image,
-                              (face_image_result['position_left'], face_image_result['position_top']),
-                              (face_image_result['position_right'], face_image_result['position_bottom']), "")
+    # Draw box if all positions are not null
+    if all([face_image_result['position_left'],
+            face_image_result['position_top'],
+            face_image_result['position_right'],
+            face_image_result['position_bottom']]):
+        image = draw_box(image,
+                         (face_image_result['position_left'],
+                          face_image_result['position_top']),
+                         (face_image_result['position_right'],
+                          face_image_result['position_bottom']),
+                         "")
 
     # Insert one result
     results = [{
@@ -292,8 +289,7 @@ def result(face_image_id: str):
             'branch_id': face_image_result['branch_id'],
             'camera_id': face_image_result['camera_id'],
             'results': results,
-            'photo_data_uri': image_to_data_uri(image_with_box)}
-
+            'photo_data_uri': image_to_data_uri(image)}
 
 
 # For check with probe in openshift
