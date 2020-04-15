@@ -252,20 +252,6 @@ def result(face_image_id: str):
         face_image_result, gender_result, race_result, age_result = get_result(
             int(face_image_id))
 
-        # Get image
-    image = get_s3_image(face_image_result['image_path'])
-
-    # Draw box if all positions are not null
-    if all([face_image_result['position_left'],
-            face_image_result['position_top'],
-            face_image_result['position_right'],
-            face_image_result['position_bottom']]):
-        image = draw_box(image,
-                         (face_image_result['position_left'],
-                          face_image_result['position_top']),
-                         (face_image_result['position_right'],
-                          face_image_result['position_bottom']),
-                         "")
 
     # Insert one result
     results = [{
@@ -288,8 +274,7 @@ def result(face_image_id: str):
             'id': face_image_result['id'],
             'branch_id': face_image_result['branch_id'],
             'camera_id': face_image_result['camera_id'],
-            'results': results,
-            'photo_data_uri': image_to_data_uri(image)}
+            'results': results}
 
 
 # For check with probe in openshift
