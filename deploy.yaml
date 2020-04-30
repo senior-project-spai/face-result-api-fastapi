@@ -55,4 +55,4 @@ spec:
     port: 80
   selector:
     app: face-result-api
-  type: NodePort
+  type: LoadBalancer
