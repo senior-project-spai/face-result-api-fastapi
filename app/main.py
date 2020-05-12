@@ -5,7 +5,7 @@ from io import StringIO
 import time
 
 # fastapi
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import StreamingResponse
 from pydantic import BaseModel
@@ -83,7 +83,7 @@ def result_csv(start: float = None,
             min_gender_confidence is None, min_age_confidence is None, min_race_confidence is None,
             start is None, end is None,
             race is None, gender is None, min_age is None, max_age is None]):
-        return {}
+        raise HTTPException(status_code=400, detail="At least one parameter is needed")
 
     # get data from DB
     connection = pymysql.connect(
@@ -179,8 +179,8 @@ def result_csv(start: float = None,
 
     # Return nothing if rows is empty
     if not rows:
-        # TODO: return 204 code
-        return {}
+        # return 204 code
+        raise HTTPException(status_code=204, detail="Result is empty")
 
     # Transform to CSV
     csv_stream = StringIO()
