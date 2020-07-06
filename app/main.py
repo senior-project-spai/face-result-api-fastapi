@@ -216,6 +216,11 @@ def get_result(face_image_id=None):
         cursor.execute(query_latest_face_image, {
                        'face_image_id': face_image_id})
         face_image_row = cursor.fetchone()
+        
+        # return empty dict to all results if face_image is not found
+        return {}, {}, {}, {}
+        
+        # Get face_image_id
         face_image_id = face_image_row['id']
 
         # Get Gender Result
@@ -252,7 +257,11 @@ def result(face_image_id: str):
         face_image_result, gender_result, race_result, age_result = get_result(
             int(face_image_id))
 
-        # Get image
+    # raise error if face_image is not found
+    if not face_image_result:
+        raise HTTPException(status_code=404, detail="Face image not found")
+        
+    # Get image
     image = get_s3_image(face_image_result['image_path'])
 
     # Draw box if all positions are not null
@@ -293,8 +302,6 @@ def result(face_image_id: str):
 
 
 # For check with probe in openshift
-
-
 @app.get('/healthz')
 def health_check():
     return
