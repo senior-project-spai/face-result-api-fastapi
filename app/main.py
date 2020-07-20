@@ -218,7 +218,8 @@ def get_result(face_image_id=None):
         face_image_row = cursor.fetchone()
         
         # return empty dict to all results if face_image is not found
-        return {}, {}, {}, {}
+        if face_image_row is None:
+            return {}, {}, {}, {}
         
         # Get face_image_id
         face_image_id = face_image_row['id']
