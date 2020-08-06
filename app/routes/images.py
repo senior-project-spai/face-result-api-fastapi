@@ -11,6 +11,7 @@ router = APIRouter()
 SELECT_ALL_FACES_RESULT_QUERY = """
 SELECT 
     face.id as id,
+    face.image_id,
     face.position_top,
     face.position_right,
     face.position_bottom, 
