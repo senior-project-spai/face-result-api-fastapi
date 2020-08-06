@@ -25,6 +25,9 @@ from app import s3
 import logging
 logger = logging.getLogger("api")
 
+# routes
+from app import routes
+
 # Environment variables
 MYSQL_HOST = os.getenv('MYSQL_HOST')
 MYSQL_USER = os.getenv('MYSQL_USER')
@@ -35,6 +38,9 @@ MYSQL_DB = os.getenv('MYSQL_DB')
 app = FastAPI()
 
 app.add_middleware(CORSMiddleware, allow_origins=['*'])
+
+# including routes
+app.include_router(routes.images.router, prefix="/_api/images")
 
 
 def draw_box(img, lt_corner: Tuple[int], rb_corner: Tuple[int], title: str):
