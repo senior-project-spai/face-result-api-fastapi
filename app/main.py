@@ -20,7 +20,7 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 
 # S3
-import s3
+from app import s3
 
 # logging
 import logging
@@ -52,7 +52,7 @@ def draw_box(img, lt_corner: Tuple[int], rb_corner: Tuple[int], title: str):
     draw = ImageDraw.Draw(img)
     draw.rectangle([lt_corner, rb_corner], outline="red", width=2)
     draw.text(lt_corner, title, font=ImageFont.truetype(
-        "font/RobotoMono-Bold.ttf", size=16))
+        "app/font/RobotoMono-Bold.ttf", size=16))
     return img
 
 
