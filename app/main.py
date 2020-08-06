@@ -15,9 +15,8 @@ import pymysql
 from pymysql.cursors import DictCursor
 
 # Image
-import base64
 from PIL import Image, ImageDraw, ImageFont
-from io import BytesIO
+from app.utils import image_to_data_uri
 
 # S3
 from app import s3
@@ -36,16 +35,6 @@ MYSQL_DB = os.getenv('MYSQL_DB')
 app = FastAPI()
 
 app.add_middleware(CORSMiddleware, allow_origins=['*'])
-
-
-def image_to_data_uri(img: Image.Image):
-    buffered = BytesIO()
-    img.save(buffered, 'JPEG')
-    img_base64 = base64.b64encode(buffered.getvalue())
-    data_uri_byte = bytes("data:image/jpeg;base64,",
-                          encoding='utf-8') + img_base64
-    data_uri_string = data_uri_byte.decode('utf-8')
-    return data_uri_string
 
 
 def draw_box(img, lt_corner: Tuple[int], rb_corner: Tuple[int], title: str):
@@ -83,7 +72,8 @@ def result_csv(start: float = None,
             min_gender_confidence is None, min_age_confidence is None, min_race_confidence is None,
             start is None, end is None,
             race is None, gender is None, min_age is None, max_age is None]):
-        raise HTTPException(status_code=400, detail="At least one parameter is needed")
+        raise HTTPException(
+            status_code=400, detail="At least one parameter is needed")
 
     # get data from DB
     connection = pymysql.connect(
@@ -216,11 +206,11 @@ def get_result(face_image_id=None):
         cursor.execute(query_latest_face_image, {
                        'face_image_id': face_image_id})
         face_image_row = cursor.fetchone()
-        
+
         # return empty dict to all results if face_image is not found
         if face_image_row is None:
             return {}, {}, {}, {}
-        
+
         # Get face_image_id
         face_image_id = face_image_row['id']
 
@@ -261,7 +251,7 @@ def result(face_image_id: str):
     # raise error if face_image is not found
     if not face_image_result:
         raise HTTPException(status_code=404, detail="Face image not found")
-        
+
     # Get image
     image = get_s3_image(face_image_result['image_path'])
 
