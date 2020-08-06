@@ -40,7 +40,7 @@ app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=['*'])
 
 # including routes
-app.include_router(routes.images.router, prefix="/_api/images")
+app.include_router(routes.images.router, prefix="/_api/images", tags=["images"])
 
 
 def draw_box(img, lt_corner: Tuple[int], rb_corner: Tuple[int], title: str):
