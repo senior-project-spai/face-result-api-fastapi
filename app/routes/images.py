@@ -121,3 +121,21 @@ def read_image(image_id: str):
             'path': image['path'],
             'timestamp': image['timestamp'],
             'data_uri': image_to_data_uri(image["Image"])}
+
+
+@router.get("/")
+def read_all_images():
+    ''' Return all images '''
+    # Connect to database
+    sql_connection = pymysql.connect(**MYSQL_CONFIG_FADE)
+
+    with sql_connection.cursor(cursor=pymysql.cursors.DictCursor) as cursor:
+        cursor.execute("SELECT id, path, timestamp "
+                       "FROM image "
+                       "ORDER BY timestamp DESC ")
+        images = cursor.fetchall()
+
+    # Close database connection
+    sql_connection.close()
+
+    return images if images is not None else []
