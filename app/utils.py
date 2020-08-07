@@ -18,6 +18,10 @@ def image_to_data_uri(img: Image.Image):
 def draw_box(img: Image.Image, lt_corner: Tuple[int], rb_corner: Tuple[int], title: str):
     draw = ImageDraw.Draw(img)
     draw.rectangle([lt_corner, rb_corner], outline="red", width=2)
+
+    # text_size according to the size of box
+    text_size = int((rb_corner[1] - lt_corner[1]) * 0.04 * 4)
+
     draw.text(lt_corner, title, font=ImageFont.truetype(
-        "app/font/RobotoMono-Bold.ttf", size=16))
+        "app/font/RobotoMono-Bold.ttf", size=text_size))
     return img
