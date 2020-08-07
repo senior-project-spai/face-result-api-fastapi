@@ -43,6 +43,7 @@ app.add_middleware(CORSMiddleware, allow_origins=['*'])
 app.include_router(routes.images.router, prefix="/_api/images", tags=["images"])
 
 
+# TODO: use method from utils.py instead
 def draw_box(img, lt_corner: Tuple[int], rb_corner: Tuple[int], title: str):
     draw = ImageDraw.Draw(img)
     draw.rectangle([lt_corner, rb_corner], outline="red", width=2)

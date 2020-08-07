@@ -4,7 +4,7 @@ from PIL import Image
 
 from app.config import MYSQL_CONFIG_FADE
 from app.s3 import get_file_stream
-from app.utils import image_to_data_uri
+from app.utils import image_to_data_uri, draw_box
 
 router = APIRouter()
 
@@ -36,12 +36,14 @@ SELECT
     emotion.surprised_confidence,
     face_recognition.label
 FROM face 
-    INNER JOIN gender ON face.gender_id = gender.id
-    INNER JOIN age ON face.age_id = age.id
-    INNER JOIN emotion ON face.emotion_id = emotion.id
-    INNER JOIN face_recognition ON face.face_recognition_id = face_recognition.id
-WHERE face.image_id=%(image_id)s;
+    LEFT JOIN gender ON face.gender_id = gender.id
+    LEFT JOIN age ON face.age_id = age.id
+    LEFT JOIN emotion ON face.emotion_id = emotion.id
+    LEFT JOIN face_recognition ON face.face_recognition_id = face_recognition.id
+WHERE face.image_id=%(image_id)s
+ORDER BY face.timestamp;
 """
+
 
 def fetch_latest_image(cnx: pymysql.connections.Connection):
     # Get DictCursor
@@ -61,8 +63,13 @@ def read_all_faces_latest_image():
 
     latest_image = fetch_latest_image(sql_connection)
 
+    # Check if the latest image is exist
+    if latest_image is None:
+        raise HTTPException(404, "Image not found")
+
     with sql_connection.cursor(cursor=pymysql.cursors.DictCursor) as cursor:
-        cursor.execute(SELECT_ALL_FACES_RESULT_QUERY, {'image_id': latest_image['id']})
+        cursor.execute(SELECT_ALL_FACES_RESULT_QUERY, {
+                       'image_id': latest_image['id']})
         faces = cursor.fetchall()
 
     # Close database connection
@@ -82,13 +89,31 @@ def read_latest_image():
 
     # Check if the latest image is exist
     if latest_image is None:
+        sql_connection.close()
         raise HTTPException(404, "Image not found")
+
+    # Fetch all faces position
+    with sql_connection.cursor(cursor=pymysql.cursors.DictCursor) as cursor:
+        cursor.execute("SELECT id, position_top, position_right, position_bottom, position_left "
+                       "FROM face "
+                       "WHERE image_id=%(image_id)s "
+                       "ORDER BY timestamp;",
+                       {'image_id': latest_image['id']})
+        faces = cursor.fetchall()
+
+    # Close database connection
+    sql_connection.close()
 
     # Get image from S3
     latest_image["Image"] = Image.open(get_file_stream(latest_image["path"]))
 
-    # Close database connection
-    sql_connection.close()
+    # Draw all faces on image
+    for index, face in enumerate(faces):
+        latest_image["Image"] = draw_box(latest_image["Image"],
+                                         (face['position_left'],
+                                          face['position_top']),
+                                         (face['position_right'],
+                                          face['position_bottom']), str(index))
 
     return {'id': latest_image['id'],
             'path': latest_image['path'],
