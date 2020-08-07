@@ -45,31 +45,33 @@ ORDER BY face.timestamp;
 """
 
 
-def fetch_latest_image(cnx: pymysql.connections.Connection):
+def fetch_image(image_id: str, cnx: pymysql.connections.Connection):
+    image_id = image_id if image_id != "latest" else None
     # Get DictCursor
     with cnx.cursor(cursor=pymysql.cursors.DictCursor) as cursor:
         cursor.execute("SELECT id, path, timestamp "
                        "FROM image "
+                       "WHERE id=COALESCE(%(image_id)s,id) "
                        "ORDER BY timestamp DESC "
-                       "LIMIT 1;")
+                       "LIMIT 1;", {'image_id': image_id})
         image_row = cursor.fetchone()
     return image_row
 
 
-@router.get('/latest/faces')
-def read_all_faces_latest_image():
+@router.get('/{image_id}/faces')
+def read_all_faces_image(image_id: str):
     # Connect to database
     sql_connection = pymysql.connect(**MYSQL_CONFIG_FADE)
 
-    latest_image = fetch_latest_image(sql_connection)
+    image = fetch_image(image_id, sql_connection)
 
     # Check if the latest image is exist
-    if latest_image is None:
+    if image is None:
         raise HTTPException(404, "Image not found")
 
     with sql_connection.cursor(cursor=pymysql.cursors.DictCursor) as cursor:
         cursor.execute(SELECT_ALL_FACES_RESULT_QUERY, {
-                       'image_id': latest_image['id']})
+                       'image_id': image['id']})
         faces = cursor.fetchall()
 
     # Close database connection
@@ -85,15 +87,7 @@ def read_image(image_id: str):
     sql_connection = pymysql.connect(**MYSQL_CONFIG_FADE)
 
     # Fetch image by ID
-    if image_id == "latest":
-        image = fetch_latest_image(sql_connection)
-    else:
-        with sql_connection.cursor(cursor=pymysql.cursors.DictCursor) as cursor:
-            cursor.execute("SELECT id, path, timestamp "
-                           "FROM image "
-                           "WHERE id=%(image_id)s "
-                           "LIMIT 1;", {'image_id': image_id})
-            image = cursor.fetchone()
+    image = fetch_image(image_id, sql_connection)
 
     # Check if the latest image is exist
     if image is None:
