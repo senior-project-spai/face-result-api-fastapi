@@ -84,7 +84,6 @@ def read_image(image_id: str):
     # Connect to database
     sql_connection = pymysql.connect(**MYSQL_CONFIG_FADE)
 
-    # fetch latest image from database
     # Fetch image by ID
     if image_id == "latest":
         image = fetch_latest_image(sql_connection)
