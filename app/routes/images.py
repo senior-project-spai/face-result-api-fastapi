@@ -78,17 +78,26 @@ def read_all_faces_latest_image():
     return faces if faces is not None else []
 
 
-@router.get("/latest")
-def read_latest_image():
+@router.get("/{image_id}")
+def read_image(image_id: str):
     ''' return image and data of the latest image '''
     # Connect to database
     sql_connection = pymysql.connect(**MYSQL_CONFIG_FADE)
 
     # fetch latest image from database
-    latest_image = fetch_latest_image(sql_connection)
+    # Fetch image by ID
+    if image_id == "latest":
+        image = fetch_latest_image(sql_connection)
+    else:
+        with sql_connection.cursor(cursor=pymysql.cursors.DictCursor) as cursor:
+            cursor.execute("SELECT id, path, timestamp "
+                           "FROM image "
+                           "WHERE id=%(image_id)s "
+                           "LIMIT 1;", {'image_id': image_id})
+            image = cursor.fetchone()
 
     # Check if the latest image is exist
-    if latest_image is None:
+    if image is None:
         sql_connection.close()
         raise HTTPException(404, "Image not found")
 
@@ -98,24 +107,24 @@ def read_latest_image():
                        "FROM face "
                        "WHERE image_id=%(image_id)s "
                        "ORDER BY timestamp;",
-                       {'image_id': latest_image['id']})
+                       {'image_id': image['id']})
         faces = cursor.fetchall()
 
     # Close database connection
     sql_connection.close()
 
     # Get image from S3
-    latest_image["Image"] = Image.open(get_file_stream(latest_image["path"]))
+    image["Image"] = Image.open(get_file_stream(image["path"]))
 
     # Draw all faces on image
     for index, face in enumerate(faces):
-        latest_image["Image"] = draw_box(latest_image["Image"],
-                                         (face['position_left'],
-                                          face['position_top']),
-                                         (face['position_right'],
-                                          face['position_bottom']), str(index))
+        image["Image"] = draw_box(image["Image"],
+                                  (face['position_left'],
+                                   face['position_top']),
+                                  (face['position_right'],
+                                   face['position_bottom']), str(index))
 
-    return {'id': latest_image['id'],
-            'path': latest_image['path'],
-            'timestamp': latest_image['timestamp'],
-            'data_uri': image_to_data_uri(latest_image["Image"])}
+    return {'id': image['id'],
+            'path': image['path'],
+            'timestamp': image['timestamp'],
+            'data_uri': image_to_data_uri(image["Image"])}
