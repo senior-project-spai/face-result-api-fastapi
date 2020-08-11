@@ -100,11 +100,11 @@ def read_all_faces_image(image_id: str):
                 continue
 
             # Fetch result from database
-            cursor.execute("SELECT id, position_top, position_right, position_bottom, position_left "
-                           "FROM %(table)s "
+            cursor.execute(f"SELECT id, position_top, position_right, position_bottom, position_left "
+                           "FROM {table_result} "
                            "WHERE image_id=%(image_id)s "
                            "ORDER BY timestamp;",
-                           {'table': table_result, 'image_id': image['id']})
+                           {'image_id': image['id']})
             fetch_result[table_result] = cursor.fetchall()
 
     # Close database connection
