@@ -8,43 +8,7 @@ from app.utils import image_to_data_uri, draw_box, find_intersect_area
 
 router = APIRouter()
 
-SELECT_ALL_FACES_RESULT_QUERY = """
-SELECT
-    face.id as id,
-    face.image_id,
-    face.position_top,
-    face.position_right,
-    face.position_bottom,
-    face.position_left,
-    gender.male_confidence,
-    gender.female_confidence,
-    age.0_to_10_confidence,
-    age.11_to_20_confidence,
-    age.21_to_30_confidence,
-    age.31_to_40_confidence,
-    age.41_to_50_confidence,
-    age.51_to_60_confidence,
-    age.61_to_70_confidence,
-    age.71_to_100_confidence,
-    emotion.uncertain_confidence,
-    emotion.angry_confidence,
-    emotion.disgusted_confidence,
-    emotion.fearful_confidence,
-    emotion.happy_confidence,
-    emotion.neutral_confidence,
-    emotion.sad_confidence,
-    emotion.surprised_confidence,
-    face_recognition.label
-FROM face
-    LEFT JOIN gender ON face.gender_id = gender.id
-    LEFT JOIN age ON face.age_id = age.id
-    LEFT JOIN emotion ON face.emotion_id = emotion.id
-    LEFT JOIN face_recognition ON face.face_recognition_id = face_recognition.id
-WHERE face.image_id=%(image_id)s
-ORDER BY face.timestamp;
-"""
-
-table_results = {'age': ["0_to_10_confidence",
+TABLE_COLUMN_NAME = {'age': ["0_to_10_confidence",
                          "11_to_20_confidence",
                          "21_to_30_confidence",
                          "31_to_40_confidence",
@@ -91,11 +55,11 @@ def read_all_faces_image(image_id: str):
 
     with sql_connection.cursor(cursor=pymysql.cursors.DictCursor) as cursor:
 
-        # Fetch results from all tables
+        # Fetch results from each tables
         fetch_result = {}
-        for table_result, table_column_list in table_results.items():
+        for table_result, table_column_list in TABLE_COLUMN_NAME.items():
 
-            # skip this table if result is not inserted
+            # Skip this table if result is not inserted
             if image[f'{table_result}_timestamp'] is None:
                 continue
 
@@ -110,16 +74,16 @@ def read_all_faces_image(image_id: str):
     # Close database connection
     sql_connection.close()
 
-    # Create face by all results
+    # Create faces from all fetched results
     faces = []
-    # iterate through each table
-    for table, fetch_table_result in fetch_result.items():
-        # iterate through each result
-        for result in fetch_table_result:
+    # Iterate through each table
+    for table, result_list in fetch_result.items():
+        # Iterate through each result in that table
+        for result in result_list:
             # Find the exist face
             face_index_to_update = None
             for face_index, face in enumerate(faces):
-                # find intersection area
+                # Calculate intersection area
                 area = find_intersect_area({'top': face['position_top'],
                                             'right': face['position_right'],
                                             'bottom': face['position_bottom'],
@@ -130,20 +94,21 @@ def read_all_faces_image(image_id: str):
                                             'left': result['position_left']})
 
                 # condition to update the exist face
+                # condition: if the intersection between face and result is exist
                 # TODO: use a better condition
                 if area is not None:
                     face_index_to_update = face_index
                     break
 
             if face_index_to_update is not None:
-                # Update face position
+                # Update face position to the exist face
                 faces[-1]["position_top"] = min(faces[-1]["position_top"], result["position_top"])
                 faces[-1]["position_right"] = max(faces[-1]["position_right"], result["position_right"])
                 faces[-1]["position_bottom"] = max(faces[-1]["position_bottom"], result["position_bottom"])
                 faces[-1]["position_left"] = min(faces[-1]["position_left"], result["position_left"])
 
                 # Add each column
-                for column_name in table_results[table]:
+                for column_name in TABLE_COLUMN_NAME[table]:
                     faces[face_index_to_update][column_name] = result[column_name]
             else:
                 # Create new face
@@ -154,10 +119,10 @@ def read_all_faces_image(image_id: str):
                     faces[-1][position] = result[position]
 
                 # Add each column
-                for column_name in table_results[table]:
+                for column_name in TABLE_COLUMN_NAME[table]:
                     faces[-1][column_name] = result[column_name]
 
-    return faces if faces is not None else []
+    return faces
 
 
 @router.get("/{image_id}")
