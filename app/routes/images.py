@@ -93,14 +93,14 @@ def read_all_faces_image(image_id: str):
 
         # Fetch results from all tables
         fetch_result = {}
-        for table_result in table_results:
+        for table_result, table_column_list in table_results.items():
 
             # skip this table if result is not inserted
             if image[f'{table_result}_timestamp'] is None:
                 continue
 
             # Fetch result from database
-            cursor.execute("SELECT id, position_top, position_right, position_bottom, position_left "
+            cursor.execute(f"SELECT id, position_top, position_right, position_bottom, position_left, {', '.join(table_column_list)} "
                            f"FROM {table_result} "
                            "WHERE image_id=%(image_id)s "
                            "ORDER BY timestamp;",
