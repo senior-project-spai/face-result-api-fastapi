@@ -102,10 +102,10 @@ def read_all_faces_image(image_id: str):
 
             if face_index_to_update is not None:
                 # Update face position to the exist face
-                faces[-1]["position_top"] = min(faces[-1]["position_top"], result["position_top"])
-                faces[-1]["position_right"] = max(faces[-1]["position_right"], result["position_right"])
-                faces[-1]["position_bottom"] = max(faces[-1]["position_bottom"], result["position_bottom"])
-                faces[-1]["position_left"] = min(faces[-1]["position_left"], result["position_left"])
+                faces[face_index_to_update]["position_top"] = min(faces[face_index_to_update]["position_top"], result["position_top"])
+                faces[face_index_to_update]["position_right"] = max(faces[face_index_to_update]["position_right"], result["position_right"])
+                faces[face_index_to_update]["position_bottom"] = max(faces[face_index_to_update]["position_bottom"], result["position_bottom"])
+                faces[face_index_to_update]["position_left"] = min(faces[face_index_to_update]["position_left"], result["position_left"])
 
                 # Add each column
                 for column_name in TABLE_COLUMN_NAME[table]:
