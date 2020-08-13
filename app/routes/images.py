@@ -139,15 +139,6 @@ def read_image(image_id: str):
         sql_connection.close()
         raise HTTPException(404, "Image not found")
 
-    # Fetch all faces position
-    with sql_connection.cursor(cursor=pymysql.cursors.DictCursor) as cursor:
-        cursor.execute("SELECT id, position_top, position_right, position_bottom, position_left "
-                       "FROM face "
-                       "WHERE image_id=%(image_id)s "
-                       "ORDER BY timestamp;",
-                       {'image_id': image['id']})
-        faces = cursor.fetchall()
-
     # Close database connection
     sql_connection.close()
 
