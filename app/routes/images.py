@@ -154,14 +154,6 @@ def read_image(image_id: str):
     # Get image from S3
     image["Image"] = Image.open(get_file_stream(image["path"]))
 
-    # Draw all faces on image
-    for index, face in enumerate(faces):
-        image["Image"] = draw_box(image["Image"],
-                                  (face['position_left'],
-                                   face['position_top']),
-                                  (face['position_right'],
-                                   face['position_bottom']), str(index))
-
     return {'id': image['id'],
             'path': image['path'],
             'timestamp': image['timestamp'],
